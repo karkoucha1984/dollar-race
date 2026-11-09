@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff5fa2">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>سباق الدولار</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffe9f3;--card:#fff;--ink:#3b1f4d;--pink:#ff5fa2;--mint:#3ed6b0;--sun:#ffd23f;--shadow:#d9a6c4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2a1738;--card:#40245a;--ink:#fff1fa;--shadow:#17081f}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Baloo Bhaijaan 2","Segoe UI",Tahoma,sans-serif;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:manipulation}
+#app{position:relative;width:min(100vw,calc((100vh - 24px) * .62));aspect-ratio:360/580;max-height:100%}
+canvas{width:100%;height:auto;display:block;border-radius:22px;box-shadow:0 8px 0 var(--shadow)}
+.ov{position:absolute;inset:0;border-radius:22px;background:rgba(59,31,77,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+.ov.hide{display:none}
+.box{background:var(--card);border-radius:26px;padding:22px 20px;text-align:center;width:100%;box-shadow:0 6px 0 var(--shadow)}
+h1{margin:0 0 4px;font-size:clamp(28px,9vw,40px);color:var(--pink);font-weight:800;line-height:1.1}
+p{margin:6px 0;font-size:clamp(15px,4.4vw,19px)}
+.cars{display:flex;gap:12px;justify-content:center;margin:12px 0}
+.sw{width:46px;height:46px;border-radius:50%;border:4px solid transparent;cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{border-color:var(--ink);transform:scale(1.12)}
+.sw:focus-visible,button:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.go{font:inherit;font-weight:800;font-size:clamp(20px,6vw,26px);background:var(--pink);color:#fff;border:0;border-radius:40px;padding:8px 34px;cursor:pointer;box-shadow:0 5px 0 #c23a79;margin-top:6px}
+.go:active{transform:translateY(4px);box-shadow:0 1px 0 #c23a79}
+.pad{position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:space-between;padding:0 12px;direction:ltr;pointer-events:none}
+.pad div{display:flex;gap:8px}.pad button{pointer-events:auto;width:64px;height:64px;border-radius:50%;border:0;color:#3b1f4d;font-size:26px;box-shadow:0 4px 0 rgba(0,0,0,.2)}.pad .p1{background:#ffb3d3}.pad .p2{background:#9be9d6}
+.pad button:active{transform:translateY(3px)}
+.box .go{display:block;margin:8px auto 0}.go.alt{background:var(--mint);box-shadow:0 5px 0 #1f9d82;color:#073b30}
+[hidden]{display:none!important}
+input{font:inherit;font-size:28px;text-align:center;width:130px;border-radius:16px;border:3px solid var(--pink);padding:4px;background:var(--card);color:var(--ink);letter-spacing:4px}
+.n0 .pad div:last-child,.n1 .pad div:first-child{display:none}.n0 .pad,.n1 .pad{justify-content:center}
+@media (hover:hover) and (pointer:fine){.pad{display:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="c" width="360" height="580" aria-label="لعبة سباق سيارات"></canvas>
+  <div class="pad"><div><button class="p1" id="l1" aria-label="الوردية يسار">◀</button><button class="p1" id="r1" aria-label="الوردية يمين">▶</button></div><div><button class="p2" id="l2" aria-label="الخضراء يسار">◀</button><button class="p2" id="r2" aria-label="الخضراء يمين">▶</button></div></div>
+  <div class="ov" id="menu"><div class="box">
+    <h1>سباق الدولار</h1>
+    <p>اجمعا الدولارات وتجنّبا الحواجز!</p>
+    <button class="go" id="net">العب بهاتفين</button>
+    <button class="go alt" id="loc">جوال واحد</button>
+    <p id="best"></p>
+  </div></div>
+  <div class="ov hide" id="lobby"><div class="box">
+    <h1 id="lt">العب بهاتفين</h1>
+    <p id="lm"></p>
+    <div id="join">
+      <button class="go" id="cb">أنشئي لعبة</button>
+      <p>أو اكتبي رمز اللعبة</p>
+      <input id="code" inputmode="numeric" maxlength="4" placeholder="0000" aria-label="رمز اللعبة">
+      <button class="go alt" id="jb">انضمّي</button>
+    </div>
+    <button class="go" id="go2" hidden>ابدآ السباق</button>
+    <button class="go alt bk">رجوع</button>
+  </div></div>
+  <div class="ov hide" id="over"><div class="box">
+    <h1 id="ot">أحسنتِ!</h1>
+    <p id="os"></p>
+    <p id="ob"></p>
+    <p id="wait" hidden>بانتظار صاحبة اللعبة لسباق جديد</p>
+    <button class="go" id="again">سباق جديد</button>
+    <button class="go alt bk">القائمة</button>
+  </div></div>
+</div>
+<script>
+const cv=document.getElementById('c'),g=cv.getContext('2d'),W=360,H=580;
+const LX=[75,145,215,285],PY=430,PC=['#ff5fa2','#2ec4b6'],RC=['#3b82f6','#16a34a','#f43f5e'];
+let mode='menu',best=0;
+try{best=+localStorage.getItem('starRaceBest')||0}catch(e){}
+const $=id=>document.getElementById(id);
+function showBest(){$('best').textContent=best?'أفضل نتيجة: $'+best:''}
+showBest();
+
+let P,speed,objs,t,spawn,off,trees,flash,total;
+function reset(){P=[0,1].map(i=>({lane:i?2:1,px:LX[i?2:1],s:0,h:3,hurt:0}));total=0;speed=230;objs=[];t=0;spawn=0.6;off=0;flash=0;
+ trees=[];for(let i=0;i<8;i++)trees.push({y:i*80,s:i%2?0:1,k:i%3})}
+let ac;
+function beep(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),v=ac.createGain();
+ o.frequency.value=f;o.type='triangle';v.gain.value=.12;o.connect(v);v.connect(ac.destination);o.start();v.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.stop(ac.currentTime+d)}catch(e){}}
+function move(i,d){if(net)i=role;if(mode!=='play'||P[i].h<=0)return;P[i].lane=Math.max(0,Math.min(3,P[i].lane+d));if(net&&role===1)room.presence({lane:P[1].lane})}
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='a')move(0,-1);if(k==='d')move(0,1);if(e.key==='ArrowLeft')move(1,-1);if(e.key==='ArrowRight')move(1,1)});
+[['l1',0,-1],['r1',0,1],['l2',1,-1],['r2',1,1]].forEach(([id,i,d])=>{$(id).onpointerdown=e=>{e.preventDefault();move(i,d)}});
+const show=(id,on)=>$(id).classList.toggle('hide',!on),say=t=>{$('lm').textContent=t};
+let room=null,net=false,role=0,tick=0,gsDead=0,joinT=0;
+function peerOf(r){return room&&room.peers().find(p=>!p.isMe&&p.kind==='viewer'&&p.presence.role===r)}
+function setNet(on){$('app').className=on?'n'+role:''}
+function begin(){reset();mode='play';show('menu',false);show('lobby',false);show('over',false);beep(520,.15)}
+async function connect(host){
+ const code=host?String(1000+Math.floor(Math.random()*9000)):$('code').value.trim();
+ if(!/^\d{4}$/.test(code)){say('اكتبي رمزاً من 4 أرقام');return}
+ say('جارٍ الاتصال...');
+ try{const R=typeof claude!=='undefined'?await claude.use('room'):null;if(!R)throw 0;room=await R.join('g'+code)}
+ catch(e){room=null;say('اللعب بهاتفين يحتاج أن يفتح الطرفان الرابط بحساب Claude. جرّبا «جوال واحد».');return}
+ net=true;role=host?0:1;setNet(true);mode='lobby';reset();joinT=Date.now();
+ room.presence({role:host?'h':'g',lane:2});
+ $('join').hidden=true;$('lt').textContent=host?'الرمز: '+code:'تم الانضمام'}
+function lobbyTick(){
+ if(role===0){const gp=peerOf('g');$('go2').hidden=!gp;say(gp?'اللاعبة الأخرى جاهزة!':'أعطي هذا الرمز للاعبة الأخرى وانتظري...')}
+ else{const hp=peerOf('h');say(hp?'تم الاتصال! بانتظار بدء السباق...':(Date.now()-joinT>5000?'لم أجد لعبة بهذا الرمز':'جارٍ البحث...'))}}
+function snap(){return{m:mode[0],sp:Math.round(speed),f:flash>0?1:0,p:P.map(p=>[p.lane,p.s,p.h,p.hurt>0?Math.round(p.hurt*10):0]),o:objs.map(o=>['scr'.indexOf(o.t),o.l,Math.round(o.y),o.c||0])}}
+function applyState(dt){
+ const hp=peerOf('h'),s=hp&&hp.presence.g;if(!s){gsDead=1;return}gsDead=0;
+ const el=(Date.now()-hp.updatedAt)/1000;speed=s.sp;flash=s.f?1:0;scen(dt);
+ s.p.forEach((a,i)=>{const p=P[i];if(i!==role)p.lane=a[0];p.s=a[1];p.h=a[2];p.hurt=a[3]?a[3]/10+.001:0});
+ objs=s.o.map(o=>({t:'scr'[o[0]],l:o[1],y:o[2]+speed*el*(o[0]===2?.55:1),c:o[3]}));
+ P.forEach(p=>p.px+=(LX[p.lane]-p.px)*Math.min(1,dt*14));
+ if(s.m==='p'&&mode!=='play'){mode='play';P[1].lane=2;room.presence({lane:2});show('lobby',false);show('over',false)}
+ else if(s.m==='o'&&mode==='play'){mode='over';showEnd()}}
+$('loc').onclick=()=>{net=false;setNet(false);begin()};
+$('net').onclick=()=>{show('menu',false);show('lobby',true);say('أنشئي لعبة أو اكتبي رمز اللعبة')};
+$('cb').onclick=()=>connect(true);$('jb').onclick=()=>connect(false);
+$('go2').onclick=begin;$('again').onclick=begin;
+document.querySelectorAll('.bk').forEach(b=>b.onclick=()=>{if(room)room.leave();room=null;net=false;setNet(false);mode='menu';reset();
+ $('join').hidden=false;$('go2').hidden=true;$('lt').textContent='العب بهاتفين';say('');show('lobby',false);show('over',false);show('menu',true)});
+
+function car(x,y,c,w=44,h=76){g.save();g.translate(x,y);
+ g.fillStyle='#222';[[-w/2-4,-h/2+8],[w/2-2,-h/2+8],[-w/2-4,h/2-24],[w/2-2,h/2-24]].forEach(p=>g.fillRect(p[0],p[1],8,18));
+ g.fillStyle=c;rr(-w/2,-h/2,w,h,14);g.fill();
+ g.fillStyle='rgba(255,255,255,.85)';rr(-w/2+7,-h/2+16,w-14,16,6);g.fill();
+ g.fillStyle='rgba(0,0,0,.25)';rr(-w/2+7,h/2-26,w-14,12,5);g.fill();
+ g.fillStyle='#fff3a0';g.beginPath();g.arc(-w/2+9,-h/2+6,4,0,7);g.arc(w/2-9,-h/2+6,4,0,7);g.fill();g.restore()}
+function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
+function star(x,y,r){g.beginPath();g.arc(x,y,r,0,7);g.fillStyle='#ffd23f';g.fill();g.lineWidth=3;g.strokeStyle='#e8a200';g.stroke();g.fillStyle='#1f7a3d';g.font='800 '+Math.round(r*1.5)+'px Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('$',x,y+1);g.textBaseline='alphabetic'}
+function heart(x,y,s,on){g.fillStyle=on?'#ff3b7f':'rgba(255,255,255,.45)';g.beginPath();g.moveTo(x,y+s*.35);g.bezierCurveTo(x-s,y-s*.3,x-s*.6,y-s,x,y-s*.45);g.bezierCurveTo(x+s*.6,y-s,x+s,y-s*.3,x,y+s*.35);g.fill()}
+function tree(x,y,k){g.fillStyle='#8a5a3c';g.fillRect(x-4,y,8,16);g.fillStyle=['#2fbf71','#ff8fc2','#7bd957'][k];g.beginPath();g.arc(x,y,17,0,7);g.fill()}
+
+function draw(){
+ g.fillStyle='#8be28b';g.fillRect(0,0,W,H);
+ g.fillStyle='#7ad47a';for(let i=-1;i<8;i++){g.fillRect(0,((i*90+off*.5)%720)-90,40,45);g.fillRect(320,((i*90+off*.5)%720)-90,40,45)}
+ trees.forEach(r=>tree(r.s?16:344,r.y,r.k));
+ g.fillStyle='#4a4a63';g.fillRect(40,0,280,H);
+ g.fillStyle='#fff';g.fillRect(36,0,6,H);g.fillRect(318,0,6,H);
+ g.fillStyle='#ffe98a';for(const x of [110,180,250])for(let y=-60+(off%90);y<H;y+=90)g.fillRect(x-3,y,6,48);
+ objs.forEach(o=>{const x=LX[o.l];
+  if(o.t==='s')star(x,o.y,19);
+  else if(o.t==='c'){g.fillStyle='#ff7a1a';g.beginPath();g.moveTo(x,o.y-24);g.lineTo(x+18,o.y+18);g.lineTo(x-18,o.y+18);g.fill();g.fillStyle='#fff';g.fillRect(x-10,o.y,20,7);g.fillStyle='#ff7a1a';g.fillRect(x-22,o.y+16,44,8)}
+  else car(x,o.y,RC[o.c])});
+ P.forEach((p,i)=>{if(p.h>0&&(p.hurt<=0||Math.floor(p.hurt*10)%2)){car(p.px,PY,PC[i]);g.fillStyle='#fff';g.font='800 20px Arial,sans-serif';g.textAlign='center';g.fillText(i+1,p.px,PY+7)}});
+ P.forEach((p,i)=>{const x0=i?190:10;g.fillStyle='rgba(0,0,0,.3)';rr(x0,10,160,44,22);g.fill();
+  g.fillStyle=PC[i];g.beginPath();g.arc(x0+22,32,12,0,7);g.fill();g.fillStyle='#fff';g.font='800 16px Arial,sans-serif';g.textAlign='center';g.fillText(i+1,x0+22,38);
+  g.font='800 22px Arial,sans-serif';g.textAlign='left';g.fillText('$'+p.s,x0+42,40);
+  for(let k=0;k<3;k++)heart(x0+110+k*18,32,8,k<p.h)});
+ if(flash>0){g.globalAlpha=Math.min(1,flash);g.textAlign='center';g.fillStyle='#fff';g.font='800 34px "Baloo Bhaijaan 2",sans-serif';g.fillText('أسرع!',W/2,200);g.globalAlpha=1}
+}
+function scen(dt){off+=speed*dt;trees.forEach(r=>{r.y+=speed*dt;if(r.y>H+30){r.y=-40;r.k=Math.floor(Math.random()*3)}})}
+function update(dt){
+ t+=dt;flash-=dt;scen(dt);
+ P.forEach(p=>{p.hurt-=dt;p.px+=(LX[p.lane]-p.px)*Math.min(1,dt*14)});
+
+ if(net){const gp=peerOf('g');if(gp&&typeof gp.presence.lane==='number')P[1].lane=Math.max(0,Math.min(3,gp.presence.lane|0))}
+ spawn-=dt;
+ if(spawn<=0){spawn=Math.max(.45,1.05-speed/900)+Math.random()*.3;
+  const l=Math.floor(Math.random()*4),r=Math.random();
+  objs.push(r<.5?{t:'s',l,y:-40}:r<.8?{t:'c',l,y:-40}:{t:'r',l,y:-60,c:Math.floor(Math.random()*3)});
+  if(Math.random()<.3){const l2=(l+1+Math.floor(Math.random()*3))%4;objs.push({t:'s',l:l2,y:-40-120})}}
+ for(const o of objs){o.y+=speed*dt*(o.t==='r'?.55:1);
+  for(const p of P){if(o.done||p.h<=0)continue;
+   if(Math.abs(LX[o.l]-p.px)<34&&Math.abs(o.y-PY)<(o.t==='s'?44:56)){
+    if(o.t==='s'){o.done=1;p.s++;total++;beep(880,.12);if(total%5===0){speed+=30;flash=1.2}}
+    else if(p.hurt<=0){o.done=1;p.h--;p.hurt=1.4;beep(180,.25);if(P[0].h<=0&&P[1].h<=0)end()}}}}
+ objs=objs.filter(o=>!o.done&&o.y<H+80);
+ speed=Math.min(520,speed+dt*3);
+}
+function end(){mode='over';showEnd()}
+function showEnd(){const a=P[0].s,b=P[1].s,m=Math.max(a,b);let nb=m>best;if(nb){best=m;try{localStorage.setItem('starRaceBest',best)}catch(e){}}
+ $('ot').textContent=a===b?'تعادل!':(a>b?'الوردية فازت!':'الخضراء فازت!');
+ $('os').textContent='الوردية $'+a+'، الخضراء $'+b;
+ $('ob').textContent=nb&&m>0?'رقم قياسي جديد!':'أفضل نتيجة: $'+best;
+ showBest();$('again').hidden=net&&role===1;$('wait').hidden=!(net&&role===1);show('over',true)}
+let last=0;reset();
+function loop(ts){const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+ if(net&&role===1)applyState(dt);
+ else{if(mode==='play')update(dt);if(net&&++tick%3===0)room.presence({g:snap()})}
+ if(net&&mode==='lobby')lobbyTick();
+ draw();
+ if(gsDead&&net&&role===1&&mode==='play'){g.fillStyle='#fff';g.font='800 24px Arial,sans-serif';g.textAlign='center';g.fillText('انقطع الاتصال',W/2,300)}
+ requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+</script>
+<script>if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))</script>
+</body>
+</html>
